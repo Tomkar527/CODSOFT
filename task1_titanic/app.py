@@ -2,12 +2,21 @@ from flask import Flask, request, jsonify, render_template
 import pickle
 import numpy as np
 import pandas as pd
+import os
 
 app = Flask(__name__)
 
 # Load model and df
-model = pickle.load(open('model.pkl', 'rb'))
-df = pickle.load(open('df.pkl', 'rb'))
+# Get the directory where app.py is located
+base_path = os.path.dirname(os.path.abspath(__file__))
+
+# Build the full path to the files
+model_path = os.path.join(base_path, 'model.pkl')
+df_path = os.path.join(base_path, 'df.pkl')
+
+# Load model and df using the full paths
+model = pickle.load(open(model_path, 'rb'))
+df = pickle.load(open(df_path, 'rb'))
 
 @app.route('/')
 def home():
