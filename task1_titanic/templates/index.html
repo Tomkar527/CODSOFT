@@ -401,7 +401,6 @@
     <p>Gradient Boosting Model · Enter passenger details to predict survival</p>
   </header>
 
-  <!-- Stats bar loaded from /api/stats -->
   <div class="stats-bar" id="statsBar">
     <div class="stat-card"><div class="val" id="sTotal">—</div><div class="lbl">Total Passengers</div></div>
     <div class="stat-card"><div class="val" id="sSurvived">—</div><div class="lbl">Survived</div></div>
@@ -413,7 +412,6 @@
     <h2>🔍 Passenger Information</h2>
 
     <div class="form-grid">
-
       <div class="form-group">
         <label>Passenger Class</label>
         <select id="pclass">
@@ -458,12 +456,9 @@
           <span class="fare-val">£<span id="fareValDisplay">30</span></span>
         </div>
       </div>
-
     </div>
 
-    <button class="btn-predict" id="predictBtn" onclick="predict()">
-      Predict Survival
-    </button>
+    <button class="btn-predict" id="predictBtn" onclick="predict()">Predict Survival</button>
 
     <div class="result" id="result">
       <div class="headline" id="resultHeadline"></div>
@@ -484,187 +479,98 @@
     <div class="error-msg" id="errorMsg"></div>
   </div>
 
-  <!-- ── About / Project Description ── -->
   <div class="about-card">
     <h2>📖 About This Project</h2>
-
-    <p>
-      This project was built as part of a <strong>Machine Learning internship at CodSoft</strong>.
-      The goal was to predict whether a passenger aboard the RMS Titanic would survive the tragedy
-      of April 1912 — one of the most iconic binary classification problems in data science.
-    </p>
-
-    <p><strong>Project Pipeline</strong></p>
-    <div class="pipeline">
-      <span class="pipe-step">📥 Load Dataset</span>
-      <span class="pipe-step">🔍 EDA &amp; Visualisation</span>
-      <span class="pipe-step">🧹 Data Cleaning</span>
-      <span class="pipe-step">⚙️ Feature Engineering</span>
-      <span class="pipe-step">🤖 Model Training</span>
-      <span class="pipe-step">📊 Evaluation</span>
-      <span class="pipe-step">💾 Export &amp; Deploy</span>
+    <p>This project was built as part of a <strong>Machine Learning internship at CodSoft</strong>...</p>
     </div>
 
-    <p>
-      We started by exploring the raw Titanic dataset — visualising survival distributions across
-      gender, passenger class, age, and embarkation port. Columns like
-      <strong>PassengerId, Name, Ticket</strong> and <strong>Cabin</strong> were dropped as they
-      carried no predictive signal. A new feature, <strong>Family Size</strong>, was engineered
-      from <em>SibSp + Parch + 1</em> to better capture group survival dynamics.
-    </p>
-
-    <p><strong>Challenges We Solved</strong></p>
-    <ul class="challenges">
-      <li><strong>Missing Age values</strong> — imputed with the column mean to preserve all rows rather than discarding them.</li>
-      <li><strong>Missing Embarked values</strong> — the two affected rows were dropped as they were too few to impute reliably.</li>
-      <li><strong>Categorical encoding</strong> — Sex (male→0, female→1) and Embarked (C→0, Q→1, S→2) were label-encoded so the model could process them numerically.</li>
-      <li><strong>Feature redundancy</strong> — SibSp and Parch were combined into a single Family Size feature and the originals removed, reducing noise.</li>
-      <li><strong>Model selection</strong> — Logistic Regression, Decision Tree, Random Forest, KNN, and Gradient Boosting were all tested. <strong>Gradient Boosting</strong> delivered the highest accuracy and was chosen for deployment.</li>
-    </ul>
-
-    <p>
-      The trained sklearn pipeline was serialised with <strong>pickle</strong> and served through
-      a <strong>Flask REST API</strong>, making live predictions accessible via this interactive UI.
-    </p>
-
-    <div class="tech-badges">
-      <span class="badge">Python</span>
-      <span class="badge">Pandas</span>
-      <span class="badge">NumPy</span>
-      <span class="badge">Scikit-learn</span>
-      <span class="badge">Gradient Boosting</span>
-      <span class="badge">Flask</span>
-      <span class="badge">Pickle</span>
-      <span class="badge">Seaborn</span>
-      <span class="badge">Matplotlib</span>
-    </div>
-  </div>
-
-  <!-- ── Credits ── -->
   <div class="credits-card">
     <div class="internship-badge">🎓 CodSoft Machine Learning Internship</div>
-    <p style="color:#64748b;font-size:0.82rem;margin-bottom:18px;">
-      This project was developed as a task submission for the CodSoft ML Internship Program
-    </p>
-    <hr class="divider">
-    <p style="color:#64748b;font-size:0.8rem;margin:0 0 6px 0;">Created by</p>
     <div class="creator-name">T. Omkar</div>
-    <p class="creator-sub">ML Intern · Data Science Enthusiast</p>
-    <p class="codsoft-line">Titanic Survival Prediction · <span>CodSoft Internship Project</span></p>
-
     <div class="social-links">
-      <!-- Update the href values with your actual profile URLs -->
-      <a class="social-link linkedin" href="https://www.linkedin.com/in/t-omkar-025383382/" target="_blank" rel="noopener">
-        <div class="icon-circle">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-          </svg>
-        </div>
-        <span class="link-label">LinkedIn</span>
-      </a>
-
-      <a class="social-link github" href="https://github.com/Tomkar527" target="_blank" rel="noopener">
-        <div class="icon-circle">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
-          </svg>
-        </div>
-        <span class="link-label">GitHub</span>
-      </a>
-
-      <a class="social-link portfolio" href="https://omkar05.netlify.app/" target="_blank" rel="noopener">
-        <div class="icon-circle">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-          </svg>
-        </div>
-        <span class="link-label">Portfolio</span>
-      </a>
+      <a class="social-link linkedin" href="https://www.linkedin.com/in/t-omkar-025383382/" target="_blank">LinkedIn</a>
+      <a class="social-link github" href="https://github.com/Tomkar527" target="_blank">GitHub</a>
     </div>
   </div>
 
-  <footer>© 2024 T. Omkar &nbsp;·&nbsp; CodSoft ML Internship &nbsp;·&nbsp; Titanic Survival Predictor &nbsp;·&nbsp; Built with Flask &amp; scikit-learn</footer>
+  <footer>© 2024 T. Omkar &nbsp;·&nbsp; CodSoft ML Internship</footer>
 
   <script>
-    // 1. Sync fare slider display
+    // Configuration: Replace with your actual Render URL
+    const API_BASE_URL = "https://titanic-survival-prediction-d6bw.onrender.com";
+
     const fareRange = document.getElementById('fare');
     fareRange.addEventListener('input', () => {
       document.getElementById('fareLabel').textContent = fareRange.value;
       document.getElementById('fareValDisplay').textContent = fareRange.value;
     });
 
-    // 2. Load stats on page load
     async function loadStats() {
       try {
-        // Points to your Flask /api/stats route
-        const r = await fetch('/api/stats');
+        const r = await fetch(`${API_BASE_URL}/api/stats`);
+        if (!r.ok) return;
         const d = await r.json();
-        
-        if (d.error) return;
-
         document.getElementById('sTotal').textContent = d.total_passengers;
         document.getElementById('sSurvived').textContent = d.survived;
         document.getElementById('sDied').textContent = d.not_survived;
         document.getElementById('sRate').textContent = d.survival_rate + '%';
-      } catch(e) { 
-        console.warn('Stats not loaded. Make sure the API is running.', e); 
-      }
+      } catch(e) { console.warn('Stats not loaded', e); }
     }
     loadStats();
 
-    // 3. Prediction Logic
     async function predict() {
       const btn = document.getElementById('predictBtn');
       const resultDiv = document.getElementById('result');
-      const errorDiv  = document.getElementById('errorMsg');
+      const errorDiv = document.getElementById('errorMsg');
 
-      // UI Reset
       resultDiv.style.display = 'none';
-      errorDiv.style.display  = 'none';
+      errorDiv.style.display = 'none';
       btn.disabled = true;
       btn.innerHTML = '<span class="loader"></span>Predicting…';
 
-      // Prepare payload with correct data types (Numbers)
       const payload = {
-        pclass:      parseInt(document.getElementById('pclass').value),
-        sex:         parseInt(document.getElementById('sex').value),
-        age:         parseFloat(document.getElementById('age').value),
-        fare:        parseFloat(document.getElementById('fare').value),
-        embarked:    parseInt(document.getElementById('embarked').value),
+        pclass: parseInt(document.getElementById('pclass').value),
+        sex: parseInt(document.getElementById('sex').value),
+        age: parseFloat(document.getElementById('age').value),
+        fare: parseFloat(document.getElementById('fare').value),
+        embarked: parseInt(document.getElementById('embarked').value),
         family_size: parseInt(document.getElementById('family_size').value)
       };
 
       try {
-        const res = await fetch('/predict', {
+        const res = await fetch(`${API_BASE_URL}/predict`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        
+
+        if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.error || `HTTP ${res.status}`);
+        }
+
         const data = await res.json();
 
-        if (!res.ok) throw new Error(data.error || 'Prediction failed');
-
-        // Show result based on boolean survived flag
         resultDiv.className = 'result ' + (data.survived ? 'survived' : 'died');
         document.getElementById('resultHeadline').textContent = data.message;
 
-        // Animate bars using the decimals from the API (converted to %)
-        // survival_probability is 0.85 -> becomes 85%
-        const survivePct = (data.survival_probability * 100).toFixed(2);
-        const deathPct = (100 - survivePct).toFixed(2);
+        const sProb = parseFloat(data.survival_probability);
+        // If API returns probability as decimal (0-1), multiply by 100. 
+        // If it's already 0-100, just use it.
+        const sPct = sProb <= 1 ? (sProb * 100).toFixed(2) : sProb.toFixed(2);
+        const dPct = (100 - sPct).toFixed(2);
 
         setTimeout(() => {
-          document.getElementById('barSurvive').style.width = survivePct + '%';
-          document.getElementById('barDeath').style.width   = deathPct + '%';
-          document.getElementById('pctSurvive').textContent = survivePct + '%';
-          document.getElementById('pctDeath').textContent   = deathPct + '%';
+          document.getElementById('barSurvive').style.width = sPct + '%';
+          document.getElementById('barDeath').style.width = dPct + '%';
+          document.getElementById('pctSurvive').textContent = sPct + '%';
+          document.getElementById('pctDeath').textContent = dPct + '%';
         }, 50);
 
         resultDiv.style.display = 'block';
       } catch(e) {
-        errorDiv.textContent    = '⚠️ Error: ' + e.message;
-        errorDiv.style.display  = 'block';
+        errorDiv.textContent = '⚠️ Error: ' + e.message;
+        errorDiv.style.display = 'block';
       } finally {
         btn.disabled = false;
         btn.innerHTML = 'Predict Survival';
