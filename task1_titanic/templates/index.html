@@ -586,44 +586,52 @@
   <footer>© 2024 T. Omkar &nbsp;·&nbsp; CodSoft ML Internship &nbsp;·&nbsp; Titanic Survival Predictor &nbsp;·&nbsp; Built with Flask &amp; scikit-learn</footer>
 
   <script>
-    // Sync fare slider display
+    // 1. Sync fare slider display
     const fareRange = document.getElementById('fare');
     fareRange.addEventListener('input', () => {
       document.getElementById('fareLabel').textContent = fareRange.value;
       document.getElementById('fareValDisplay').textContent = fareRange.value;
     });
 
-    // Load stats on page load
+    // 2. Load stats on page load
     async function loadStats() {
       try {
+        // Points to your Flask /api/stats route
         const r = await fetch('/api/stats');
         const d = await r.json();
+        
+        if (d.error) return;
+
         document.getElementById('sTotal').textContent = d.total_passengers;
         document.getElementById('sSurvived').textContent = d.survived;
         document.getElementById('sDied').textContent = d.not_survived;
         document.getElementById('sRate').textContent = d.survival_rate + '%';
-      } catch(e) { console.warn('Stats not loaded', e); }
+      } catch(e) { 
+        console.warn('Stats not loaded. Make sure the API is running.', e); 
+      }
     }
     loadStats();
 
+    // 3. Prediction Logic
     async function predict() {
       const btn = document.getElementById('predictBtn');
       const resultDiv = document.getElementById('result');
       const errorDiv  = document.getElementById('errorMsg');
 
-      // Reset
+      // UI Reset
       resultDiv.style.display = 'none';
       errorDiv.style.display  = 'none';
       btn.disabled = true;
       btn.innerHTML = '<span class="loader"></span>Predicting…';
 
+      // Prepare payload with correct data types (Numbers)
       const payload = {
-        pclass:      document.getElementById('pclass').value,
-        sex:         document.getElementById('sex').value,
-        age:         document.getElementById('age').value,
-        fare:        document.getElementById('fare').value,
-        embarked:    document.getElementById('embarked').value,
-        family_size: document.getElementById('family_size').value
+        pclass:      parseInt(document.getElementById('pclass').value),
+        sex:         parseInt(document.getElementById('sex').value),
+        age:         parseFloat(document.getElementById('age').value),
+        fare:        parseFloat(document.getElementById('fare').value),
+        embarked:    parseInt(document.getElementById('embarked').value),
+        family_size: parseInt(document.getElementById('family_size').value)
       };
 
       try {
@@ -632,20 +640,25 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
+        
         const data = await res.json();
 
-        if (data.error) throw new Error(data.error);
+        if (!res.ok) throw new Error(data.error || 'Prediction failed');
 
-        // Show result
+        // Show result based on boolean survived flag
         resultDiv.className = 'result ' + (data.survived ? 'survived' : 'died');
         document.getElementById('resultHeadline').textContent = data.message;
 
-        // Animate bars
+        // Animate bars using the decimals from the API (converted to %)
+        // survival_probability is 0.85 -> becomes 85%
+        const survivePct = (data.survival_probability * 100).toFixed(2);
+        const deathPct = (100 - survivePct).toFixed(2);
+
         setTimeout(() => {
-          document.getElementById('barSurvive').style.width = data.survival_probability + '%';
-          document.getElementById('barDeath').style.width   = data.death_probability    + '%';
-          document.getElementById('pctSurvive').textContent = data.survival_probability + '%';
-          document.getElementById('pctDeath').textContent   = data.death_probability    + '%';
+          document.getElementById('barSurvive').style.width = survivePct + '%';
+          document.getElementById('barDeath').style.width   = deathPct + '%';
+          document.getElementById('pctSurvive').textContent = survivePct + '%';
+          document.getElementById('pctDeath').textContent   = deathPct + '%';
         }, 50);
 
         resultDiv.style.display = 'block';
