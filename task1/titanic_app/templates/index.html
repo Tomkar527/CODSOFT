@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Titanic Survival Predictor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      background: #0a0e1a;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(26,86,219,0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(99,102,241,0.1) 0%, transparent 40%);
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    header .ship-icon { font-size: 3.5rem; display: block; margin-bottom: 12px; }
+    header h1 {
+      font-size: 2.4rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+    header p { color: #94a3b8; margin-top: 8px; font-size: 1rem; }
+
+    /* ── Stats Bar ── */
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 16px 24px;
+      text-align: center;
+      min-width: 140px;
+      backdrop-filter: blur(8px);
+    }
+    .stat-card .val {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #60a5fa;
+    }
+    .stat-card .lbl { font-size: 0.75rem; color: #64748b; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── Main Card ── */
+    .card {
+      background: rgba(15,23,42,0.8);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 40px;
+      width: 100%;
+      max-width: 680px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+    }
+    .card h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── Form Grid ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input, select {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: #e2e8f0;
+      font-size: 0.95rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      width: 100%;
+    }
+    input::placeholder { color: #475569; }
+    input:focus, select:focus {
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 3px rgba(96,165,250,0.15);
+    }
+    select option { background: #1e293b; color: #e2e8f0; }
+
+    /* ── Fare Slider ── */
+    .fare-wrapper { display: flex; align-items: center; gap: 12px; }
+    .fare-wrapper input[type=range] {
+      flex: 1;
+      padding: 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-track {
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.1);
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: #60a5fa;
+      cursor: pointer;
+      margin-top: -7px;
+    }
+    .fare-val {
+      min-width: 52px;
+      text-align: right;
+      font-weight: 700;
+      color: #60a5fa;
+      font-size: 0.95rem;
+    }
+
+    /* ── Predict Button ── */
+    .btn-predict {
+      margin-top: 28px;
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+      box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+    }
+    .btn-predict:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.5); }
+    .btn-predict:active { transform: translateY(0); }
+    .btn-predict:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ── Result ── */
+    .result {
+      margin-top: 24px;
+      border-radius: 16px;
+      padding: 24px;
+      display: none;
+      animation: fadeUp 0.4s ease;
+    }
+    .result.survived { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); }
+    .result.died     { background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.3); }
+
+    .result .headline {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .result.survived .headline { color: #34d399; }
+    .result.died     .headline { color: #f87171; }
+
+    .prob-bars { display: flex; flex-direction: column; gap: 10px; }
+    .prob-row { display: flex; align-items: center; gap: 12px; font-size: 0.85rem; }
+    .prob-row .lbl { width: 90px; color: #94a3b8; }
+    .prob-row .bar-bg {
+      flex: 1;
+      height: 10px;
+      border-radius: 5px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .prob-row .bar-fill {
+      height: 100%;
+      border-radius: 5px;
+      transition: width 0.7s cubic-bezier(.22,1,.36,1);
+    }
+    .bar-fill.survive { background: linear-gradient(90deg, #34d399, #10b981); }
+    .bar-fill.death   { background: linear-gradient(90deg, #f87171, #ef4444); }
+    .prob-row .pct { width: 40px; text-align: right; font-weight: 600; color: #e2e8f0; }
+
+    .error-msg {
+      margin-top: 16px;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 10px;
+      padding: 14px;
+      color: #f87171;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    /* ── Loader ── */
+    .loader {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── About Section ── */
+    .about-card {
+      background: rgba(15,23,42,0.8);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 36px 40px;
+      width: 100%;
+      max-width: 680px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+      margin-top: 28px;
+    }
+    .about-card h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .about-card p {
+      color: #94a3b8;
+      font-size: 0.93rem;
+      line-height: 1.75;
+      margin-bottom: 14px;
+    }
+    .about-card p:last-child { margin-bottom: 0; }
+    .about-card strong { color: #cbd5e1; }
+    .pipeline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 16px 0;
+    }
+    .pipe-step {
+      background: rgba(96,165,250,0.1);
+      border: 1px solid rgba(96,165,250,0.2);
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 0.8rem;
+      color: #93c5fd;
+    }
+    .challenges {
+      list-style: none;
+      margin: 12px 0;
+    }
+    .challenges li {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      line-height: 1.7;
+      padding-left: 22px;
+      position: relative;
+      margin-bottom: 6px;
+    }
+    .challenges li::before {
+      content: '⚡';
+      position: absolute;
+      left: 0;
+      font-size: 0.75rem;
+    }
+    .tech-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .badge {
+      background: rgba(99,102,241,0.12);
+      border: 1px solid rgba(99,102,241,0.25);
+      border-radius: 20px;
+      padding: 5px 13px;
+      font-size: 0.78rem;
+      color: #a5b4fc;
+      font-weight: 500;
+    }
+
+    /* ── Credits Card ── */
+    .credits-card {
+      background: rgba(15,23,42,0.8);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 32px 40px;
+      width: 100%;
+      max-width: 680px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+      margin-top: 28px;
+      text-align: center;
+    }
+    .internship-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.1));
+      border: 1px solid rgba(251,191,36,0.3);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 0.78rem;
+      color: #fbbf24;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    .creator-name {
+      font-size: 1.55rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+    }
+    .creator-sub { color: #64748b; font-size: 0.85rem; margin-bottom: 8px; }
+    .codsoft-line { color: #94a3b8; font-size: 0.88rem; margin-bottom: 24px; }
+    .codsoft-line span { color: #60a5fa; font-weight: 600; }
+    .divider { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 20px 0; }
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 8px;
+    }
+    .social-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      transition: transform 0.2s;
+    }
+    .social-link:hover { transform: translateY(-4px); }
+    .social-link .icon-circle {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: box-shadow 0.2s;
+    }
+    .social-link:hover .icon-circle { box-shadow: 0 8px 24px rgba(0,0,0,0.45); }
+    .social-link.linkedin  .icon-circle { background: linear-gradient(135deg,#0a66c2,#0d7fd6); }
+    .social-link.github    .icon-circle { background: linear-gradient(135deg,#24292e,#404448); }
+    .social-link.portfolio .icon-circle { background: linear-gradient(135deg,#6366f1,#8b5cf6); }
+    .social-link svg { width: 24px; height: 24px; fill: #fff; }
+    .link-label { font-size: 0.72rem; color: #64748b; font-weight: 500; }
+
+    /* ── Footer ── */
+    footer { margin-top: 36px; color: #334155; font-size: 0.75rem; padding-bottom: 20px; }
+
+    @media (max-width: 520px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full { grid-column: 1; }
+      .card, .about-card, .credits-card { padding: 24px; }
+      header h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <span class="ship-icon">🚢</span>
+    <h1>Titanic Survival Predictor</h1>
+    <p>Gradient Boosting Model · Enter passenger details to predict survival</p>
+  </header>
+
+  <!-- Stats bar loaded from /api/stats -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-card"><div class="val" id="sTotal">—</div><div class="lbl">Total Passengers</div></div>
+    <div class="stat-card"><div class="val" id="sSurvived">—</div><div class="lbl">Survived</div></div>
+    <div class="stat-card"><div class="val" id="sDied">—</div><div class="lbl">Didn't Survive</div></div>
+    <div class="stat-card"><div class="val" id="sRate">—</div><div class="lbl">Survival Rate</div></div>
+  </div>
+
+  <div class="card">
+    <h2>🔍 Passenger Information</h2>
+
+    <div class="form-grid">
+
+      <div class="form-group">
+        <label>Passenger Class</label>
+        <select id="pclass">
+          <option value="1">1st Class — Upper</option>
+          <option value="2">2nd Class — Middle</option>
+          <option value="3" selected>3rd Class — Lower</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Sex</label>
+        <select id="sex">
+          <option value="0" selected>Male</option>
+          <option value="1">Female</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Age (years)</label>
+        <input type="number" id="age" placeholder="e.g. 28" min="1" max="100" value="28" />
+      </div>
+
+      <div class="form-group">
+        <label>Port of Embarkation</label>
+        <select id="embarked">
+          <option value="0">Cherbourg (C)</option>
+          <option value="1">Queenstown (Q)</option>
+          <option value="2" selected>Southampton (S)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Family Size (incl. yourself)</label>
+        <input type="number" id="family_size" placeholder="e.g. 1" min="1" max="20" value="1" />
+      </div>
+
+      <div class="form-group">
+        <label>Fare (£) — <span id="fareLabel">30</span></label>
+        <div class="fare-wrapper">
+          <input type="range" id="fare" min="0" max="500" step="1" value="30"
+                 oninput="document.getElementById('fareLabel').textContent=this.value" />
+          <span class="fare-val">£<span id="fareValDisplay">30</span></span>
+        </div>
+      </div>
+
+    </div>
+
+    <button class="btn-predict" id="predictBtn" onclick="predict()">
+      Predict Survival
+    </button>
+
+    <div class="result" id="result">
+      <div class="headline" id="resultHeadline"></div>
+      <div class="prob-bars">
+        <div class="prob-row">
+          <span class="lbl">Survive</span>
+          <div class="bar-bg"><div class="bar-fill survive" id="barSurvive" style="width:0%"></div></div>
+          <span class="pct" id="pctSurvive">0%</span>
+        </div>
+        <div class="prob-row">
+          <span class="lbl">Not Survive</span>
+          <div class="bar-bg"><div class="bar-fill death" id="barDeath" style="width:0%"></div></div>
+          <span class="pct" id="pctDeath">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <!-- ── About / Project Description ── -->
+  <div class="about-card">
+    <h2>📖 About This Project</h2>
+
+    <p>
+      This project was built as part of a <strong>Machine Learning internship at CodSoft</strong>.
+      The goal was to predict whether a passenger aboard the RMS Titanic would survive the tragedy
+      of April 1912 — one of the most iconic binary classification problems in data science.
+    </p>
+
+    <p><strong>Project Pipeline</strong></p>
+    <div class="pipeline">
+      <span class="pipe-step">📥 Load Dataset</span>
+      <span class="pipe-step">🔍 EDA &amp; Visualisation</span>
+      <span class="pipe-step">🧹 Data Cleaning</span>
+      <span class="pipe-step">⚙️ Feature Engineering</span>
+      <span class="pipe-step">🤖 Model Training</span>
+      <span class="pipe-step">📊 Evaluation</span>
+      <span class="pipe-step">💾 Export &amp; Deploy</span>
+    </div>
+
+    <p>
+      We started by exploring the raw Titanic dataset — visualising survival distributions across
+      gender, passenger class, age, and embarkation port. Columns like
+      <strong>PassengerId, Name, Ticket</strong> and <strong>Cabin</strong> were dropped as they
+      carried no predictive signal. A new feature, <strong>Family Size</strong>, was engineered
+      from <em>SibSp + Parch + 1</em> to better capture group survival dynamics.
+    </p>
+
+    <p><strong>Challenges We Solved</strong></p>
+    <ul class="challenges">
+      <li><strong>Missing Age values</strong> — imputed with the column mean to preserve all rows rather than discarding them.</li>
+      <li><strong>Missing Embarked values</strong> — the two affected rows were dropped as they were too few to impute reliably.</li>
+      <li><strong>Categorical encoding</strong> — Sex (male→0, female→1) and Embarked (C→0, Q→1, S→2) were label-encoded so the model could process them numerically.</li>
+      <li><strong>Feature redundancy</strong> — SibSp and Parch were combined into a single Family Size feature and the originals removed, reducing noise.</li>
+      <li><strong>Model selection</strong> — Logistic Regression, Decision Tree, Random Forest, KNN, and Gradient Boosting were all tested. <strong>Gradient Boosting</strong> delivered the highest accuracy and was chosen for deployment.</li>
+    </ul>
+
+    <p>
+      The trained sklearn pipeline was serialised with <strong>pickle</strong> and served through
+      a <strong>Flask REST API</strong>, making live predictions accessible via this interactive UI.
+    </p>
+
+    <div class="tech-badges">
+      <span class="badge">Python</span>
+      <span class="badge">Pandas</span>
+      <span class="badge">NumPy</span>
+      <span class="badge">Scikit-learn</span>
+      <span class="badge">Gradient Boosting</span>
+      <span class="badge">Flask</span>
+      <span class="badge">Pickle</span>
+      <span class="badge">Seaborn</span>
+      <span class="badge">Matplotlib</span>
+    </div>
+  </div>
+
+  <!-- ── Credits ── -->
+  <div class="credits-card">
+    <div class="internship-badge">🎓 CodSoft Machine Learning Internship</div>
+    <p style="color:#64748b;font-size:0.82rem;margin-bottom:18px;">
+      This project was developed as a task submission for the CodSoft ML Internship Program
+    </p>
+    <hr class="divider">
+    <p style="color:#64748b;font-size:0.8rem;margin:0 0 6px 0;">Created by</p>
+    <div class="creator-name">T. Omkar</div>
+    <p class="creator-sub">ML Intern · Data Science Enthusiast</p>
+    <p class="codsoft-line">Titanic Survival Prediction · <span>CodSoft Internship Project</span></p>
+
+    <div class="social-links">
+      <!-- Update the href values with your actual profile URLs -->
+      <a class="social-link linkedin" href="https://www.linkedin.com/in/t-omkar-025383382/" target="_blank" rel="noopener">
+        <div class="icon-circle">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+          </svg>
+        </div>
+        <span class="link-label">LinkedIn</span>
+      </a>
+
+      <a class="social-link github" href="https://github.com/Tomkar527" target="_blank" rel="noopener">
+        <div class="icon-circle">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+          </svg>
+        </div>
+        <span class="link-label">GitHub</span>
+      </a>
+
+      <a class="social-link portfolio" href="https://omkar05.netlify.app/" target="_blank" rel="noopener">
+        <div class="icon-circle">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+          </svg>
+        </div>
+        <span class="link-label">Portfolio</span>
+      </a>
+    </div>
+  </div>
+
+  <footer>© 2024 T. Omkar &nbsp;·&nbsp; CodSoft ML Internship &nbsp;·&nbsp; Titanic Survival Predictor &nbsp;·&nbsp; Built with Flask &amp; scikit-learn</footer>
+
+  <script>
+    // Sync fare slider display
+    const fareRange = document.getElementById('fare');
+    fareRange.addEventListener('input', () => {
+      document.getElementById('fareLabel').textContent = fareRange.value;
+      document.getElementById('fareValDisplay').textContent = fareRange.value;
+    });
+
+    // Load stats on page load
+    async function loadStats() {
+      try {
+        const r = await fetch('/api/stats');
+        const d = await r.json();
+        document.getElementById('sTotal').textContent = d.total_passengers;
+        document.getElementById('sSurvived').textContent = d.survived;
+        document.getElementById('sDied').textContent = d.not_survived;
+        document.getElementById('sRate').textContent = d.survival_rate + '%';
+      } catch(e) { console.warn('Stats not loaded', e); }
+    }
+    loadStats();
+
+    async function predict() {
+      const btn = document.getElementById('predictBtn');
+      const resultDiv = document.getElementById('result');
+      const errorDiv  = document.getElementById('errorMsg');
+
+      // Reset
+      resultDiv.style.display = 'none';
+      errorDiv.style.display  = 'none';
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loader"></span>Predicting…';
+
+      const payload = {
+        pclass:      document.getElementById('pclass').value,
+        sex:         document.getElementById('sex').value,
+        age:         document.getElementById('age').value,
+        fare:        document.getElementById('fare').value,
+        embarked:    document.getElementById('embarked').value,
+        family_size: document.getElementById('family_size').value
+      };
+
+      try {
+        const res = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (data.error) throw new Error(data.error);
+
+        // Show result
+        resultDiv.className = 'result ' + (data.survived ? 'survived' : 'died');
+        document.getElementById('resultHeadline').textContent = data.message;
+
+        // Animate bars
+        setTimeout(() => {
+          document.getElementById('barSurvive').style.width = data.survival_probability + '%';
+          document.getElementById('barDeath').style.width   = data.death_probability    + '%';
+          document.getElementById('pctSurvive').textContent = data.survival_probability + '%';
+          document.getElementById('pctDeath').textContent   = data.death_probability    + '%';
+        }, 50);
+
+        resultDiv.style.display = 'block';
+      } catch(e) {
+        errorDiv.textContent    = '⚠️ Error: ' + e.message;
+        errorDiv.style.display  = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Predict Survival';
+      }
+    }
+  </script>
+</body>
+</html>
