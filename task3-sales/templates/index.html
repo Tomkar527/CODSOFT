@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sales Predictor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f0f1a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1e1b4b, #312e81);
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 1px solid #4338ca33;
+    }
+
+    header .logo {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+
+    header h1 { font-size: 1.5rem; font-weight: 700; color: #c7d2fe; }
+    header p  { font-size: 0.85rem; color: #818cf8; margin-top: 2px; }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 24px;
+      flex: 1;
+    }
+
+    /* Stats bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: #1e1b4b55;
+      border: 1px solid #4338ca33;
+      border-radius: 12px;
+      padding: 16px 20px;
+      text-align: center;
+    }
+
+    .stat-card .value { font-size: 1.6rem; font-weight: 700; color: #a5b4fc; }
+    .stat-card .label { font-size: 0.75rem; color: #64748b; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Main grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+
+    @media (max-width: 700px) { .main-grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: #13131f;
+      border: 1px solid #1e1b4b;
+      border-radius: 16px;
+      padding: 28px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #a5b4fc;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Form */
+    .form-group { margin-bottom: 20px; }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 8px;
+    }
+
+    label span.range-hint {
+      font-size: 0.75rem;
+      color: #475569;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 6px;
+      background: #1e1b4b;
+      border-radius: 3px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      cursor: pointer;
+      box-shadow: 0 0 8px #6366f180;
+    }
+
+    .num-input {
+      width: 72px;
+      background: #1e1b4b;
+      border: 1px solid #312e81;
+      border-radius: 8px;
+      color: #e2e8f0;
+      padding: 6px 10px;
+      font-size: 0.9rem;
+      text-align: right;
+    }
+
+    .num-input:focus { outline: none; border-color: #6366f1; }
+
+    .predict-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .predict-btn:hover   { opacity: 0.9; transform: translateY(-1px); }
+    .predict-btn:active  { transform: translateY(0); }
+    .predict-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Result card */
+    .result-card {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .result-idle {
+      color: #475569;
+      font-size: 0.9rem;
+    }
+
+    .result-value {
+      font-size: 3.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.1;
+      display: none;
+    }
+
+    .result-unit {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .result-breakdown {
+      margin-top: 20px;
+      display: none;
+      gap: 10px;
+      flex-direction: column;
+    }
+
+    .breakdown-item {
+      background: #1e1b4b44;
+      border: 1px solid #312e8155;
+      border-radius: 8px;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+    }
+
+    .breakdown-item span:last-child { color: #a5b4fc; font-weight: 600; }
+
+    .error-msg {
+      color: #f87171;
+      font-size: 0.85rem;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* Loading spinner */
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid #1e1b4b;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+      display: none;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* About / Description section */
+    .about-section {
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+
+    @media (max-width: 700px) { .about-section { grid-template-columns: 1fr; } }
+
+    .about-card {
+      background: #13131f;
+      border: 1px solid #1e1b4b;
+      border-radius: 16px;
+      padding: 28px;
+    }
+
+    .about-card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #a5b4fc;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .about-card p {
+      font-size: 0.875rem;
+      color: #94a3b8;
+      line-height: 1.75;
+    }
+
+    .steps {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .steps li {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      font-size: 0.875rem;
+      color: #94a3b8;
+      line-height: 1.6;
+    }
+
+    .step-num {
+      min-width: 24px; height: 24px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: white;
+      margin-top: 1px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .tag {
+      background: #1e1b4b;
+      border: 1px solid #4338ca55;
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.75rem;
+      color: #818cf8;
+    }
+
+    /* Footer / Credits */
+    footer {
+      margin-top: 48px;
+      border-top: 1px solid #1e1b4b;
+      padding: 36px 24px 28px;
+      text-align: center;
+    }
+
+    .credit-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #13131f;
+      border: 1px solid #1e1b4b;
+      border-radius: 50px;
+      padding: 10px 20px;
+      margin-bottom: 8px;
+    }
+
+    .credit-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .credit-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #c7d2fe;
+    }
+
+    .credit-sub {
+      font-size: 0.75rem;
+      color: #475569;
+      margin-top: 2px;
+    }
+
+    .internship-tag {
+      margin: 12px auto 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #1e1b4b55;
+      border: 1px solid #4338ca44;
+      border-radius: 8px;
+      padding: 6px 16px;
+      font-size: 0.8rem;
+      color: #818cf8;
+    }
+
+    .social-icons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 4px;
+    }
+
+    .social-link {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: #13131f;
+      border: 1px solid #1e1b4b;
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none;
+      transition: border-color 0.2s, transform 0.15s, background 0.2s;
+    }
+
+    .social-link:hover {
+      border-color: #6366f1;
+      background: #1e1b4b;
+      transform: translateY(-3px);
+    }
+
+    .social-link svg {
+      width: 20px; height: 20px;
+      fill: #64748b;
+      transition: fill 0.2s;
+    }
+
+    .social-link:hover svg { fill: #a5b4fc; }
+
+    .footer-copy {
+      margin-top: 20px;
+      font-size: 0.75rem;
+      color: #1e293b;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">📈</div>
+  <div>
+    <h1>Sales Predictor</h1>
+    <p>XGBoost · Advertising Dataset · Flask API</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Stats Bar -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="value">{{ stats.tv_max }}</div>
+      <div class="label">Max TV Budget</div>
+    </div>
+    <div class="stat-card">
+      <div class="value">{{ stats.radio_max }}</div>
+      <div class="label">Max Radio Budget</div>
+    </div>
+    <div class="stat-card">
+      <div class="value">{{ stats.news_max }}</div>
+      <div class="label">Max Newspaper Budget</div>
+    </div>
+    <div class="stat-card">
+      <div class="value">{{ stats.avg_sales }}</div>
+      <div class="label">Avg Sales (dataset)</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- Input Card -->
+    <div class="card">
+      <div class="card-title">📊 Ad Spend Inputs</div>
+
+      <div class="form-group">
+        <label>TV Budget <span class="range-hint">{{ stats.tv_min }} – {{ stats.tv_max }}</span></label>
+        <div class="input-row">
+          <input type="range" id="tv-slider" min="{{ stats.tv_min }}" max="{{ stats.tv_max }}" step="0.1" value="150" oninput="sync('tv')">
+          <input type="number" id="tv-num" class="num-input" value="150" step="0.1" oninput="syncFromNum('tv')">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Radio Budget <span class="range-hint">{{ stats.radio_min }} – {{ stats.radio_max }}</span></label>
+        <div class="input-row">
+          <input type="range" id="radio-slider" min="{{ stats.radio_min }}" max="{{ stats.radio_max }}" step="0.1" value="25" oninput="sync('radio')">
+          <input type="number" id="radio-num" class="num-input" value="25" step="0.1" oninput="syncFromNum('radio')">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Newspaper Budget <span class="range-hint">{{ stats.news_min }} – {{ stats.news_max }}</span></label>
+        <div class="input-row">
+          <input type="range" id="newspaper-slider" min="{{ stats.news_min }}" max="{{ stats.news_max }}" step="0.1" value="30" oninput="sync('newspaper')">
+          <input type="number" id="newspaper-num" class="num-input" value="30" step="0.1" oninput="syncFromNum('newspaper')">
+        </div>
+      </div>
+
+      <button class="predict-btn" onclick="predict()">⚡ Predict Sales</button>
+      <div class="error-msg" id="error-msg"></div>
+    </div>
+
+    <!-- Result Card -->
+    <div class="card result-card">
+      <div class="card-title" style="justify-content:center">🎯 Predicted Sales</div>
+
+      <p class="result-idle" id="result-idle">Enter your ad budgets and click predict.</p>
+      <div class="spinner" id="spinner"></div>
+      <div class="result-value" id="result-value">—</div>
+      <div class="result-unit" id="result-unit">units (in thousands)</div>
+
+      <div class="result-breakdown" id="result-breakdown">
+        <div class="breakdown-item"><span>📺 TV</span><span id="bd-tv">—</span></div>
+        <div class="breakdown-item"><span>📻 Radio</span><span id="bd-radio">—</span></div>
+        <div class="breakdown-item"><span>📰 Newspaper</span><span id="bd-news">—</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+  <!-- About / Project Description -->
+  <div class="about-section">
+
+    <div class="about-card">
+      <h2>📌 About This Project</h2>
+      <p>
+        This project predicts product <strong style="color:#c7d2fe">sales figures</strong> based on advertising budgets
+        spent across three media channels — <strong style="color:#c7d2fe">TV</strong>, <strong style="color:#c7d2fe">Radio</strong>,
+        and <strong style="color:#c7d2fe">Newspaper</strong>. Using the classic Advertising dataset (200 records),
+        we explored how each channel correlates with sales and built a regression model to forecast revenue.
+      </p>
+      <p style="margin-top:12px">
+        The goal was to help businesses make smarter budget allocation decisions by understanding which
+        advertising medium drives the most sales impact.
+      </p>
+      <div class="tag-row">
+        <span class="tag">Python</span>
+        <span class="tag">Pandas</span>
+        <span class="tag">Seaborn</span>
+        <span class="tag">XGBoost</span>
+        <span class="tag">Scikit-learn</span>
+        <span class="tag">Flask</span>
+        <span class="tag">Pickle</span>
+      </div>
+    </div>
+
+    <div class="about-card">
+      <h2>🛠️ What We Did</h2>
+      <ul class="steps">
+        <li>
+          <div class="step-num">1</div>
+          <span><strong style="color:#c7d2fe">Data Loading & EDA</strong> — Loaded <code style="color:#818cf8">advertising.csv</code> with 200 rows. Analyzed distributions of TV, Radio, and Newspaper spends against Sales using scatter plots and a 3D visualization.</span>
+        </li>
+        <li>
+          <div class="step-num">2</div>
+          <span><strong style="color:#c7d2fe">Problem Identified</strong> — A simple Linear Regression model showed limited accuracy due to non-linear relationships in the data, especially with the TV channel.</span>
+        </li>
+        <li>
+          <div class="step-num">3</div>
+          <span><strong style="color:#c7d2fe">Solution — XGBoost</strong> — Switched to an <strong style="color:#c7d2fe">XGBoost Regressor</strong> inside a Scikit-learn Pipeline. This handled non-linearity perfectly and achieved a significantly better R² score.</span>
+        </li>
+        <li>
+          <div class="step-num">4</div>
+          <span><strong style="color:#c7d2fe">Deployment</strong> — Serialized the trained pipeline with Pickle and served it via this Flask REST API with an interactive frontend.</span>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+
+</div><!-- end .container -->
+
+<!-- Footer / Credits -->
+<footer>
+
+  <div class="credit-badge">
+    <div class="credit-avatar">T</div>
+    <div>
+      <div class="credit-name">Created by — T. Omkar</div>
+      <div class="credit-sub">Machine Learning Developer</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="internship-tag">
+      🏢 CodSoft Internship &nbsp;·&nbsp; Task 3 — Sales Prediction Using Python
+    </div>
+  </div>
+
+  <div class="social-icons">
+
+    <!-- LinkedIn -->
+    <a class="social-link" href="https://www.linkedin.com/in/t-omkar-025383382/" target="_blank" title="LinkedIn">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+      </svg>
+    </a>
+
+    <!-- GitHub -->
+    <a class="social-link" href="https://github.com/Tomkar527" target="_blank" title="GitHub">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+      </svg>
+    </a>
+
+    <!-- Portfolio -->
+    <a class="social-link" href="https://omkar05.netlify.app/" target="_blank" title="Portfolio">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+      </svg>
+    </a>
+
+  </div>
+
+  <p class="footer-copy">© 2024 T. Omkar · Built during CodSoft ML Internship</p>
+
+</footer>
+
+<script>
+  function sync(name) {
+    document.getElementById(name + '-num').value = document.getElementById(name + '-slider').value;
+  }
+  function syncFromNum(name) {
+    document.getElementById(name + '-slider').value = document.getElementById(name + '-num').value;
+  }
+
+  async function predict() {
+    const tv       = parseFloat(document.getElementById('tv-num').value);
+    const radio    = parseFloat(document.getElementById('radio-num').value);
+    const newspaper = parseFloat(document.getElementById('newspaper-num').value);
+
+    // UI: loading state
+    document.getElementById('spinner').style.display = 'block';
+    document.getElementById('result-idle').style.display = 'none';
+    document.getElementById('result-value').style.display = 'none';
+    document.getElementById('result-unit').style.display = 'none';
+    document.getElementById('result-breakdown').style.display = 'none';
+    document.getElementById('error-msg').style.display = 'none';
+
+    try {
+      const res = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tv, radio, newspaper })
+      });
+      const data = await res.json();
+
+      document.getElementById('spinner').style.display = 'none';
+
+      if (data.success) {
+        document.getElementById('result-value').textContent = data.prediction;
+        document.getElementById('result-value').style.display = 'block';
+        document.getElementById('result-unit').style.display = 'block';
+        document.getElementById('result-breakdown').style.display = 'flex';
+        document.getElementById('bd-tv').textContent    = `$${data.inputs.tv}k`;
+        document.getElementById('bd-radio').textContent = `$${data.inputs.radio}k`;
+        document.getElementById('bd-news').textContent  = `$${data.inputs.newspaper}k`;
+      } else {
+        showError(data.error);
+      }
+    } catch (err) {
+      document.getElementById('spinner').style.display = 'none';
+      showError('Network error. Is Flask running?');
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = '⚠️ ' + msg;
+    el.style.display = 'block';
+    document.getElementById('result-idle').style.display = 'block';
+  }
+</script>
+</body>
+</html>
